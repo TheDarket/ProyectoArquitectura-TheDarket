@@ -1,0 +1,43 @@
+volatile byte rpmcount;
+unsigned int rpm;
+unsigned long timeold;
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); // set the LCD address to 0x27 for a 16 chars and 2 line display
+
+void setup()
+{
+  Serial.begin(9600);
+  attachInterrupt(0, rpm_fun, RISING);
+  rpmcount = 0;
+  rpm = 0;
+  timeold = 0;
+
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(2, 0);
+  lcd.print("CONTADOR RPM");
+}
+void loop()
+{
+  if (rpmcount >= 20) {
+    //Update RPM every 20 counts, increase this for better RPM resolution,
+    //decrease for faster update
+    rpm = 30 * 1000 / (millis() - timeold) * rpmcount;
+    timeold = millis();
+    rpmcount = 0;
+    Serial.println(rpm);
+
+    lcd.setCursor(2, 1);
+    lcd.print("RPM:");
+    lcd.print(rpm);
+
+  }
+}
+void rpm_fun()
+{
+  rpmcount++;
+  //Each rotation, this interrupt function is run twice
+}
